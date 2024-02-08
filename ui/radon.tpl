@@ -50,8 +50,8 @@
                                 <td>{$userson['framedipaddress']}</td>
                                 <td>{$userson['callingstationid']}</td>
 								<td>{secondsToTime($userson['acctsessiontime'])}</td>
-								<td>{mikrotik_formatBytes($userson['acctinputoctets'])}</td>
 								<td>{mikrotik_formatBytes($userson['acctoutputoctets'])}</td>
+								<td>{mikrotik_formatBytes($userson['acctinputoctets'])}</td>
 								<td>
 									<div class="btn-group pull-right">
 										<form action="{$_url}plugin/radius_users" method="post">
