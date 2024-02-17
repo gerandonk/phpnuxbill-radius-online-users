@@ -1,9 +1,9 @@
 <?php
  use Radius;
 
-register_menu("Radius Online Users", true, "radius_users", 'AFTER_SETTINGS', 'ion ion-wifi');
+register_menu("Radius Online Users", true, "radon_users", 'AFTER_SETTINGS', 'ion ion-wifi');
 
-function radius_users()
+function radon_users()
 {
     global $ui;
     _admin();
@@ -14,28 +14,27 @@ function radius_users()
     
 	$search = _post('search');
 	if ($search != '') {
-		$paginator = Paginator::build(ORM::for_table('radacct'));
+		$paginator = Paginator::build(ORM::for_table('radacct')->where_raw("acctstoptime IS NULL"));
 		$useron = ORM::for_table('radacct')
 			->where_raw("acctstoptime IS NULL")
 			->where_like('username', '%' . $search . '%')
 			->offset($paginator['startpoint'])
 			->limit($paginator['limit'])
-			->order_by_desc('username')
+			->order_by_asc('username')
 			->find_many();
 	} else {
-		$paginator = Paginator::build(ORM::for_table('radacct'));
+		$paginator = Paginator::build(ORM::for_table('radacct')->where_raw("acctstoptime IS NULL"));
 		$useron = ORM::for_table('radacct')
 			->where_raw("acctstoptime IS NULL")
 			->offset($paginator['startpoint'])
 			->limit($paginator['limit'])
-			->order_by_desc('acctsessiontime')
+			->order_by_asc('acctsessiontime')
 			->find_many();
 	}
 	
 	$totalCount = ORM::for_table('radacct')
 		->where_raw("acctstoptime IS NULL")
 		->count();	
-	$paginator['total_count'] = $totalCount;
 	
 	if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['kill']) && $_POST['kill'] === 'true') {
     $output = array();
@@ -60,7 +59,17 @@ function radius_users()
 	$ui->assign('d', $d);
 	$ui->assign('dd', $dd);
 
-	}	
+	}
+
+	if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sync']) && $_POST['sync'] === 'true') {
+		$date_now = date("Y-m-d H:i:s");
+		$dbact = ORM::for_table('radacct')
+			//->raw_execute("UPDATE radacct SET acctstoptime = '$date_now', acctterminatecause = 'Admin-Reset' WHERE acctstoptime IS NULL");
+			->raw_execute("UPDATE radacct SET acctstoptime = NOW(), acctterminatecause = 'Stale-Session'
+                     WHERE ((UNIX_TIMESTAMP(NOW()) - (UNIX_TIMESTAMP(acctstarttime) + acctsessiontime)) > (acctinterval * 2))
+                       AND (acctstoptime='0000-00-00 00:00:00' OR acctstoptime IS NULL)");
+	}
+	
 	$ui->assign('paginator', $paginator);
 	$ui->assign('useron', $useron);
 	$ui->assign('totalCount', $totalCount);
@@ -70,8 +79,9 @@ function radius_users()
 }
 
 
+
 // Function to format bytes into KB, MB, GB or TB
-function mikrotik_formatBytes($bytes, $precision = 2)
+function radon_formatBytes($bytes, $precision = 2)
 {
     $units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
     $bytes = max($bytes, 0);
@@ -82,7 +92,7 @@ function mikrotik_formatBytes($bytes, $precision = 2)
 }
 
 // Convert seconds into months, days, hours, minutes, and seconds.
-function secondsToTimeFull($ss)
+function radon_secondsToTimeFull($ss)
 {
     $s = $ss%60;
     $m = floor(($ss%3600)/60);
@@ -93,7 +103,7 @@ function secondsToTimeFull($ss)
     return "$M months, $d days, $h hours, $m minutes, $s seconds";
 }
 
-function secondsToTime($inputSeconds)
+function radon_secondsToTime($inputSeconds)
 {
     $secondsInAMinute = 60;
     $secondsInAnHour = 60 * $secondsInAMinute;
