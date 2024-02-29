@@ -21,9 +21,9 @@
                                     <span class="fa fa-search"></span>
                                 </div>
                                 <input type="text" name="search" class="form-control"
-                                    placeholder="{$_L['Search_by_Username']}..." value="{$search}">
+                                    placeholder="{Lang::T('Search by Username')}..." value="{$search}">
                                 <div class="input-group-btn">
-                                    <button class="btn btn-success" type="submit">{$_L['Search']}</button>
+                                    <button class="btn btn-success" type="submit">{Lang::T('Search')}</button>
                                 </div>
                             </div>
                         </form>
@@ -33,16 +33,16 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>No</th>
-                                <th>{$_L['Username']}</th>
-                                <th>IP NAS</th>
-                                <th>{$_L['Type']}</th>
-                                <th>IP Address</th>
-                                <th>MAC Address</th>
-                                <th>Uptime</th>
-                                <th>Download</th>
-                                <th>Upload</th>
-                                <th>{$_L['Manage']}</th>
+                                <th>{Lang::T('Number')}</th>
+                                <th>{Lang::T('Username')}</th>
+                                <th>{Lang::T('NAS')}</th>
+                                <th>{Lang::T('Type')}</th>
+                                <th>{Lang::T('IP Address')}</th>
+                                <th>{Lang::T('MAC Address')}</th>
+                                <th>{Lang::T('Uptime')}</th>
+                                <th>{Lang::T('Download')}</th>
+                                <th>{Lang::T('Upload')}</th>
+                                <th>{Lang::T('Manage')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -68,7 +68,7 @@
                                                 <button type="submit" class="btn btn-danger btn-xs" title="Disconnect"
                                                     onclick="return confirm('Disconnect User?')"><span
                                                         class="glyphicon glyphicon-alert"
-                                                        aria-hidden="true"></span>&nbsp;Disconnect</button>
+                                                        aria-hidden="true"></span>&nbsp;{Lang::T('Disconnect')}</button>
                                             </form>
                                         </div>
                                     </td>
