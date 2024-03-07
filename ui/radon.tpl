@@ -40,8 +40,8 @@
                                 <th>{Lang::T('IP Address')}</th>
                                 <th>{Lang::T('MAC Address')}</th>
                                 <th>{Lang::T('Uptime')}</th>
-                                <th>{Lang::T('Download')}</th>
                                 <th>{Lang::T('Upload')}</th>
+                                <th>{Lang::T('Download')}</th>
                                 <th>{Lang::T('Manage')}</th>
                             </tr>
                         </thead>
