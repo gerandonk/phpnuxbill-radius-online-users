@@ -1,16 +1,17 @@
 <?php
  use Radius;
 
-register_menu("Radius Online Users", true, "radon_users", 'AFTER_SETTINGS', 'ion ion-wifi');
+ register_menu("Radius Online Users", true, "radon_users", 'RADIUS', '');
 
 function radon_users()
 {
     global $ui;
     _admin();
     $ui->assign('_title', 'Radius Online Users');
-    $ui->assign('_system_menu', 'Radius Online Users');
+    $ui->assign('_system_menu', 'radius');
     $admin = Admin::_info();
     $ui->assign('_admin', $admin);
+    
     
 	$search = _post('search');
 	if ($search != '') {
