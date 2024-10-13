@@ -63,13 +63,13 @@ function radon_users()
 	}
 
 	if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sync']) && $_POST['sync'] === 'true') {
-		$date_now = date("Y-m-d H:i:s");
-		$dbact = ORM::for_table('radacct')
-			//->raw_execute("UPDATE radacct SET acctstoptime = '$date_now', acctterminatecause = 'Admin-Reset' WHERE acctstoptime IS NULL");
-			->raw_execute("UPDATE radacct SET acctstoptime = NOW(), acctterminatecause = 'Stale-Session'
-                     WHERE ((UNIX_TIMESTAMP(NOW()) - (UNIX_TIMESTAMP(acctstarttime) + acctsessiontime)) > (acctinterval * 2))
+    $date_now = date("Y-m-d H:i:s");
+    $dbact = ORM::for_table('radacct')
+        ->raw_execute("UPDATE radacct SET acctstoptime = NOW(), acctterminatecause = 'Stale-Session'
+                     WHERE ((CAST(UNIX_TIMESTAMP(NOW()) AS SIGNED) - (CAST(UNIX_TIMESTAMP(acctstarttime) AS SIGNED) + acctsessiontime)) > (acctinterval * 2))
                        AND (acctstoptime='0000-00-00 00:00:00' OR acctstoptime IS NULL)");
-	}
+}
+
 	
 	$ui->assign('paginator', $paginator);
 	$ui->assign('useron', $useron);
