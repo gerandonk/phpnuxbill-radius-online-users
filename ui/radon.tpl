@@ -6,10 +6,10 @@
             <div class="panel-heading">
 				<div class="btn-group pull-right">
                     <form action="{$_url}plugin/radon_users" method="post">
-					<input type="hidden" name="sync" value="true">
-					<button type="submit" class="btn btn-primary btn-xs" title="sync"
-                        onclick="return confirm('This will sync Customer active with Mikrotik?')"><span
-                            class="glyphicon glyphicon-refresh" aria-hidden="true"></span> sync</a>
+					<input type="hidden" name="clean" value="true">
+					<button type="submit" class="btn btn-danger btn-xs" title="clean"
+                        onclick="return confirm('Are you sure to clean databases record?')"><span
+                            class="glyphicon glyphicon-trash" aria-hidden="true"></span></a>
                 </div>Online User : {$totalCount}                
             </div>
             <div class="panel-body">
