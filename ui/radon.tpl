@@ -5,11 +5,9 @@
         <div class="panel panel-hovered mb20 panel-primary">
             <div class="panel-heading">
 				<div class="btn-group pull-right">
-                    <form action="{$_url}plugin/radon_users" method="post">
-					<input type="hidden" name="clean" value="true">
-					<button type="submit" class="btn btn-danger btn-xs" title="clean"
-                        onclick="return confirm('Are you sure to clean databases record?')"><span
-                            class="glyphicon glyphicon-trash" aria-hidden="true"></span></a>
+                    <a href="{$_url}plugin/radon_users_cleandb" style="margin: 0px;"
+                    onclick="return confirm('{Lang::T('Are you Sure you want to Clean this Database Table?')}')"
+                    class="btn btn-danger btn-xs">{Lang::T('Clear Table')}</a>
                 </div>Online User : {$totalCount}                
             </div>
             <div class="panel-body">

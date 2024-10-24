@@ -37,36 +37,24 @@ function radon_users()
 		->where_raw("acctstoptime IS NULL")
 		->count();	
 	
-	if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['kill']) && $_POST['kill'] === 'true') {
-    $output = array();
-    $retcode = 0;
-	$coaport = 3799;
-	$d = _post('d');
-	$dd = _post('dd');
-	$ddd = ORM::for_table('nas')->where_like('nasname', '%' . $dd . '%')->find_one();
-	$sharedsecret = $ddd['secret'];
+	if (isset($_POST['kill'])) {
+	    $output = array();
+		$retcode = 0;
+		$coaport = 3799;
+		$d = _post('d');
+		$dd = _post('dd');
+		$ddd = ORM::for_table('nas')->where_like('nasname', '%' . $dd . '%')->find_one();
+		$sharedsecret = $ddd['secret'];
 
-    $os = strtoupper(PHP_OS);
-
-    if (strpos($os, 'WIN') === 0) {
-        // Windows OS
-        exec("echo 'User-Name=$d'|radclient $dd:$coaport disconnect '$sharedsecret'", $output, $retcode);
-    } else {
-        // Linux OS
-        exec("echo 'User-Name=$d'|radclient $dd:$coaport disconnect '$sharedsecret'", $output, $retcode);
-    }
-    $ui->assign('output', $output);
-    $ui->assign('returnCode', $retcode);
-	$ui->assign('d', $d);
-	$ui->assign('dd', $dd);
-
+		$os = strtoupper(PHP_OS);
+		if (strpos($os, 'WIN') === 0) {
+			// Windows OS
+			exec("echo 'User-Name=$d'|radclient $dd:$coaport disconnect '$sharedsecret'", $output, $retcode);
+		} else {
+			// Linux OS
+			exec("echo 'User-Name=$d'|radclient $dd:$coaport disconnect '$sharedsecret'", $output, $retcode);
+		}
 	}
-
-	if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['clean']) && $_POST['clean'] === 'true') {
-    $dbact = ORM::for_table('radacct')
-        ->raw_execute('TRUNCATE TABLE `radacct`');
-	}
-
 	
 	$ui->assign('paginator', $paginator);
 	$ui->assign('useron', $useron);
@@ -75,7 +63,6 @@ function radon_users()
     $ui->display('radon.tpl');
 	
 }
-
 
 
 // Function to format bytes into KB, MB, GB or TB
@@ -138,4 +125,17 @@ function radon_secondsToTime($inputSeconds)
     }
 
     return implode(', ', $timeParts);
+}
+
+function radon_users_cleandb()
+{
+	global $ui;
+	_admin();
+    $admin = Admin::_info();
+	try {
+	        ORM::get_db()->exec('TRUNCATE TABLE `radacct`');
+	        r2(U . 'plugin/radon_users', 's', Lang::T("RADACCT table truncated successfully."));
+	    } catch (Exception $e) {
+	        r2(U . 'plugin/radon_users', 'e', Lang::T("Failed to truncate RADACCT table."));
+	    }
 }
