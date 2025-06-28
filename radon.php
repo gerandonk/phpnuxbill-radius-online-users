@@ -1,62 +1,91 @@
 <?php
+
 use Radius;
 
 register_menu("Radius Online Users", true, "radon_users", 'RADIUS', '');
 
 function radon_users()
 {
-    global $ui;
-    _admin();
-    $ui->assign('_title', 'Radius Online Users');
-    $ui->assign('_system_menu', 'radius');
-    $admin = Admin::_info();
-    $ui->assign('_admin', $admin);
+	global $ui;
+	_admin();
+	$ui->assign('_title', 'Radius Online Users');
+	$ui->assign('_system_menu', 'radius');
+	$admin = Admin::_info();
+	$ui->assign('_admin', $admin);
 
-    $useron = ORM::for_table('radacct')
-        ->where_raw("acctstoptime IS NULL")
-        ->order_by_asc('acctsessiontime')
-        ->find_many();
-    
-    $totalCount = ORM::for_table('radacct')
-        ->where_raw("acctstoptime IS NULL")
-        ->count();
+	$useron = ORM::for_table('radacct')
+		->where_raw("acctstoptime IS NULL")
+		->order_by_asc('acctsessiontime')
+		->find_many();
 
-    if (isset($_POST['kill'])) {
-        $error = [];
-        $retcode = 0;
-        $coaport = 3799;
-        $username = _post('username');
-        $nasIp = _post('nas_ip');
-        $nas = ORM::for_table('nas')->where_like('nasname', "%$nasIp%")->find_one();
+	$totalCount = ORM::for_table('radacct')
+		->where_raw("acctstoptime IS NULL")
+		->count();
 
-        if ($nas) {
-            $sharedsecret = $nas['secret'];
-            $userOnline = ORM::for_table('radacct')
-                ->where('username', $username)
-                ->where_raw("acctstoptime IS NULL")
-                ->findOne();
+	if (isset($_POST['kill'])) {
+		$output = [];
+		$retcode = 0;
+		$coaport = 3799;
+		$username = _post('username');
+		$nasIp = _post('nas_ip');
+		$nasExists = ORM::for_table('nas')->where_like('nasname', "%$nasIp%")->find_one();
 
-            if ($userOnline) {
-                // Disconnect the user
-                exec("echo 'User-Name=$username'|radclient {$nas['nasname']}:$coaport disconnect '$sharedsecret'", $output, $retcode);
+		if ($nasExists) {
+			$sharedsecret = $nasExists['secret'] ?? 'testing123';
+			$userOnline = ORM::for_table('radacct')
+				->where('username', $username)
+				->where_raw("acctstoptime IS NULL")
+				->findOne();
 
-                // Update session end time
-                $userOnline['acctstoptime'] = date('Y-m-d H:i:s');
-                $userOnline->save();
-            } else {
-                $error[] = Lang::T("Username: $username has no active session.");
-                _log(Lang::T("Username: $username has no active session."));
-            }
-        } else {
-            $error[] = Lang::T("NAS not found for IP: $nasIp.");
-            _log(Lang::T("NAS not found for IP: $nasIp."));
-        }
-    }
-	$ui->assign('error', $error);
-    $ui->assign('useron', $useron);
-    $ui->assign('totalCount', $totalCount);
-    $ui->assign('xheader', '<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">');
-    $ui->display('radon.tpl');
+			if ($userOnline) {
+				if (empty($userOnline->username) || empty($userOnline->nasipaddress) || empty($userOnline->acctstarttime)) {
+					r2(U . 'plugin/radon_users', 'e', Lang::T("Required fields are missing for username: $username."));
+					return;
+				}
+
+				// Build safe shell command
+				$cmd = sprintf(
+					"echo 'User-Name=%s' | radclient %s:%s disconnect %s",
+					escapeshellarg($username),
+					escapeshellarg($nasExists['nasname']),
+					escapeshellarg($coaport),
+					escapeshellarg($sharedsecret)
+				);
+				exec($cmd, $output, $retcode);
+
+				if ($retcode !== 0) {
+					_log("Failed to disconnect user: $username. Output: " . implode("\n", $output));
+					sendTelegram("Failed to disconnect user: $username. Output: " . implode("\n", $output));
+				}
+
+				// Update session end time
+				ORM::get_db()->prepare("
+                    UPDATE radacct 
+                    SET acctstoptime = :stop 
+                    WHERE username = :user 
+                    AND nasipaddress = :nas 
+                    AND acctstarttime = :start
+                ")->execute([
+					':stop' => date('Y-m-d H:i:s'),
+					':user' => $userOnline->username,
+					':nas'  => $userOnline->nasipaddress,
+					':start' => $userOnline->acctstarttime
+				]);
+				_log(Lang::T("Username: $username has been disconnected successfully."));
+				r2(U . 'plugin/radon_users', 's', Lang::T("Username: $username has been disconnected successfully."));
+			} else {
+				_log(Lang::T("Username: $username has no active session."));
+				r2(U . 'plugin/radon_users', 'e', Lang::T("Username: $username has no active session."));
+			}
+		} else {
+			_log(Lang::T("NAS not found for IP: $nasIp."));
+			r2(U . 'plugin/radon_users', 'e', Lang::T("NAS not found for IP: $nasIp."));
+		}
+	}
+	$ui->assign('useron', $useron);
+	$ui->assign('totalCount', $totalCount);
+	$ui->assign('xheader', '<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">');
+	$ui->display('radon.tpl');
 }
 
 
